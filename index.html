@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RegAlert — Real-Time Regulatory Compliance Monitor</title>
+  <meta name="description"
+    content="AI-powered regulatory compliance monitoring for Indian startups. Track SEBI, RBI, MCA, TRAI regulations in real-time." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+</head>
+
+<body>
+
+  <!-- ═══════════════════════════════ NAVBAR ═══════════════════════════════════ -->
+  <nav>
+    <div class="logo">
+      <div class="logo-icon">⚖️</div>
+      Reg<span class="blue">Alert</span>
+    </div>
+
+    <div class="nav-center">
+      <div class="search-wrap">
+        <i class="fa fa-search" id="search-icon" style="cursor:pointer"></i>
+        <input id="nav-search" type="text" placeholder="Search regulations, circulars…" autocomplete="off" />
+      </div>
+    </div>
+
+    <div class="nav-right">
+      <div class="nav-badge" onclick="navigate('alerts')" id="crit-badge">🔴 3 Critical Alerts</div>
+      <div id="api-status"
+        style="font-size:0.68rem;font-weight:700;padding:3px 9px;border-radius:20px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#10b981"
+        title="Backend API Status">⚡ API</div>
+      <button class="theme-btn" onclick="toggleTheme()" data-tooltip="Toggle Theme">
+        <i class="fa fa-sun" id="theme-icon"></i>
+      </button>
+      <button class="btn btn-outline" style="border-color:var(--purple);color:var(--purple)"
+        onclick="openAITestModal()"><i class="fa fa-robot"></i> AI Tester</button>
+      <button class="btn btn-primary" onclick="exportReport()"><i class="fa fa-download"></i> Export Report</button>
+      <div class="user-avatar" onclick="logout()" title="Secure Logout"
+        style="cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px; padding:0 12px; border-radius:30px; background:rgba(239, 68, 68, 0.1); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.3); font-weight:600;">
+        <i class="fa fa-sign-out-alt"></i> Logout
+      </div>
+      <div class="nav-avatar" data-tooltip="Arjun Kumar — Admin">AK</div>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════ APP LAYOUT ════════════════════════════════ -->
+  <div class="app">
+
+    <!-- ─────────────────────────── SIDEBAR ─────────────────────────── -->
+    <aside>
+      <div class="sidebar-group">
+        <div class="sidebar-label">Main</div>
+        <div class="s-item active" data-page="dash" onclick="navigate('dash')">
+          <i class="fa fa-chart-pie"></i> Dashboard
+        </div>
+        <div class="s-item" data-page="alerts" onclick="navigate('alerts')">
+          <i class="fa fa-bell"></i> Regulatory Alerts
+          <span class="s-badge red">3</span>
+        </div>
+        <div class="s-item" data-page="obligations" onclick="navigate('obligations')">
+          <i class="fa fa-tasks"></i> Obligations
+          <span class="s-badge yellow">5</span>
+        </div>
+        <div class="s-item" data-page="calendar" onclick="navigate('calendar')">
+          <i class="fa fa-calendar-alt"></i> Deadline Calendar
+        </div>
+        <div class="s-item" data-page="risk" onclick="navigate('risk')">
+          <i class="fa fa-exclamation-triangle"></i> Risk & Penalties
+          <span class="s-badge red">!</span>
+        </div>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-label">Regulators</div>
+        <div class="s-item" onclick="setAlertFilterNav('SEBI')">
+          <i class="fa fa-landmark" style="color:#818cf8"></i> SEBI
+          <span class="s-badge blue">12</span>
+        </div>
+        <div class="s-item" onclick="setAlertFilterNav('RBI')">
+          <i class="fa fa-university" style="color:#22d3ee"></i> RBI
+          <span class="s-badge red">8</span>
+        </div>
+        <div class="s-item" onclick="setAlertFilterNav('MCA')">
+          <i class="fa fa-building" style="color:#fbbf24"></i> MCA
+          <span class="s-badge green">5</span>
+        </div>
+        <div class="s-item" onclick="setAlertFilterNav('TRAI')">
+          <i class="fa fa-broadcast-tower" style="color:#34d399"></i> TRAI
+        </div>
+        <div class="s-item" onclick="setAlertFilterNav('DPDP')">
+          <i class="fa fa-shield-alt" style="color:#c084fc"></i> DPDP Act
+          <span class="s-badge red">2</span>
+        </div>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-label">Account</div>
+        <div class="s-item" data-page="settings" onclick="navigate('settings')">
+          <i class="fa fa-cog"></i> Settings & Profile
+        </div>
+        <div class="s-item" onclick="exportReport()">
+          <i class="fa fa-file-export"></i> Export Report
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="biz-card">
+          <div class="biz-name">Arjun's FinTech</div>
+          <div class="biz-sector">FinTech / Payments · Mumbai</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+            <div class="biz-score" id="biz-score">87%</div>
+            <span style="font-size:0.68rem;color:var(--text-muted)">Compliance Score</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ─────────────────────────── MAIN CONTENT ─────────────────────── -->
+    <main>
+
+      <!-- ══════════════ PAGE: DASHBOARD ══════════════ -->
+      <div class="page active" id="pg-dash">
+
+        <!-- Page Header -->
+        <div class="ph">
+          <div class="ph-left">
+            <h1>Compliance Dashboard</h1>
+            <p>Last synced: Today 12:31 PM IST &nbsp;·&nbsp; Auto-refresh every 15 min</p>
+          </div>
+          <div class="ph-right">
+            <div class="sector-tabs">
+              <button class="s-tab active" data-sector="FinTech" onclick="setSector('FinTech')">FinTech</button>
+              <button class="s-tab" data-sector="SaaS" onclick="setSector('SaaS')">SaaS</button>
+              <button class="s-tab" data-sector="NBFC" onclick="setSector('NBFC')">NBFC</button>
+              <button class="s-tab" data-sector="EdTech" onclick="setSector('EdTech')">EdTech</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Ticker -->
+        <div class="ticker">
+          <span class="ticker-live">LIVE</span>
+          <div class="ticker-scroll">
+            <div class="ticker-inner" id="ticker-inner"></div>
+          </div>
+        </div>
+
+        <!-- KPI Stat Cards -->
+        <div class="stats-grid">
+          <div class="stat-card stat-blue">
+            <div class="stat-icon" style="background:rgba(59,130,246,0.15);color:var(--accent)"><i
+                class="fa fa-shield-alt"></i></div>
+            <div class="stat-label">Overall Compliance Score</div>
+            <div class="stat-val" style="color:var(--accent)" id="sc-score">87%</div>
+            <div class="stat-delta up">↑ 3% from last month</div>
+          </div>
+          <div class="stat-card stat-red">
+            <div class="stat-icon" style="background:rgba(239,68,68,0.15);color:var(--red)"><i
+                class="fa fa-exclamation-triangle"></i></div>
+            <div class="stat-label">Critical Alerts</div>
+            <div class="stat-val" style="color:var(--red)" id="sc-crit">3</div>
+            <div class="stat-delta dn">↑ 2 new this week</div>
+          </div>
+          <div class="stat-card stat-yellow">
+            <div class="stat-icon" style="background:rgba(245,158,11,0.15);color:var(--yellow)"><i
+                class="fa fa-clock"></i></div>
+            <div class="stat-label">Pending Obligations</div>
+            <div class="stat-val" style="color:var(--yellow)" id="sc-pend">5</div>
+            <div class="stat-delta dn">2 due within 7 days</div>
+          </div>
+          <div class="stat-card stat-green">
+            <div class="stat-icon" style="background:rgba(16,185,129,0.15);color:var(--green)"><i
+                class="fa fa-check-circle"></i></div>
+            <div class="stat-label">Completed This Month</div>
+            <div class="stat-val" style="color:var(--green)" id="sc-done">18</div>
+            <div class="stat-delta up">↑ 6 from last month</div>
+          </div>
+        </div>
+
+        <!-- AI Summary Panel -->
+        <div class="ai-panel">
+          <div class="ai-hd"><i class="fa fa-robot"></i> AI Plain-English Summary — Top Regulation</div>
+          <div style="margin-bottom:6px;display:flex;gap:8px;align-items:center;">
+            <span class="a-badge b-rbi" id="ai-reg">RBI</span>
+            <strong style="font-size:0.85rem" id="ai-title"></strong>
+          </div>
+          <div class="ai-body" id="ai-body"></div>
+          <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
+            <span class="ai-tag" id="ai-dl"></span>
+            <span class="ai-tag" id="ai-pen"></span>
+            <span class="ai-tag">🤖 AI Summarised</span>
+          </div>
+        </div>
+
+        <!-- Alerts + Notifications -->
+        <div class="g3">
+          <div class="card">
+            <div class="card-hd">
+              <h3>📡 Regulatory Alerts <span
+                  style="font-size:0.73rem;color:var(--text-muted);font-weight:400">(Sector-matched)</span></h3>
+              <button class="view-all" onclick="navigate('alerts')">View all →</button>
+            </div>
+            <div class="card-bd" id="dash-alerts"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <div class="card">
+              <div class="card-hd">
+                <h3>🔔 Team Alerts</h3>
+              </div>
+              <div class="card-bd" id="dash-notifs"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Obligations + Score + Log -->
+        <div class="g3">
+          <div class="card">
+            <div class="card-hd">
+              <h3>📋 Compliance Obligations</h3>
+              <button class="view-all" onclick="navigate('obligations')">All obligations →</button>
+            </div>
+            <div style="padding:0;">
+              <table class="obl-table">
+                <thead>
+                  <tr>
+                    <th>Obligation</th>
+                    <th>Reg</th>
+                    <th>Deadline</th>
+                    <th>Status</th>
+                    <th>Owner</th>
+                  </tr>
+                </thead>
+                <tbody id="dash-obls"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <!-- Score Ring + Progress -->
+            <div class="card">
+              <div class="card-hd">
+                <h3>📊 Compliance Health</h3>
+              </div>
+              <div class="card-bd">
+                <div class="ring-wrap">
+                  <div class="ring-svg-wrap">
+                    <svg width="88" height="88" viewBox="0 0 88 88">
+                      <defs>
+                        <linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stop-color="#3b82f6" />
+                          <stop offset="100%" stop-color="#6366f1" />
+                        </linearGradient>
+                      </defs>
+                      <circle class="ring-bg" cx="44" cy="44" r="40" />
+                      <circle class="ring-fill" id="ring-fill" cx="44" cy="44" r="40" />
+                    </svg>
+                    <div class="ring-center">
+                      <div class="ring-val" id="ring-val">87%</div>
+                      <div class="ring-lbl">SCORE</div>
+                    </div>
+                  </div>
+                  <div style="flex:1">
+                    <div class="prog-item">
+                      <div class="prog-lbl"><span>SEBI</span><span id="lb-sebi">92%</span></div>
+                      <div class="prog-bg">
+                        <div class="prog-fill" id="pr-sebi"
+                          style="width:92%;background:linear-gradient(90deg,#6366f1,#818cf8)"></div>
+                      </div>
+                    </div>
+                    <div class="prog-item">
+                      <div class="prog-lbl"><span>RBI</span><span id="lb-rbi">78%</span></div>
+                      <div class="prog-bg">
+                        <div class="prog-fill" id="pr-rbi"
+                          style="width:78%;background:linear-gradient(90deg,#22d3ee,#67e8f9)"></div>
+                      </div>
+                    </div>
+                    <div class="prog-item">
+                      <div class="prog-lbl"><span>MCA</span><span id="lb-mca">95%</span></div>
+                      <div class="prog-bg">
+                        <div class="prog-fill" id="pr-mca"
+                          style="width:95%;background:linear-gradient(90deg,#10b981,#34d399)"></div>
+                      </div>
+                    </div>
+                    <div class="prog-item">
+                      <div class="prog-lbl"><span>DPDP</span><span id="lb-dpdp">70%</span></div>
+                      <div class="prog-bg">
+                        <div class="prog-fill" id="pr-dpdp"
+                          style="width:70%;background:linear-gradient(90deg,#f59e0b,#fcd34d)"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Penalty Exposure -->
+            <div class="card">
+              <div class="card-hd">
+                <h3>⚠️ Penalty Exposure</h3>
+              </div>
+              <div class="card-bd">
+                <div class="penalty-amount" id="penalty-amt">₹3.1Cr</div>
+                <div class="penalty-note">Total fines at risk if obligations missed</div>
+                <div style="margin-top:12px;">
+                  <div class="penalty-bar">
+                    <div class="penalty-fill" id="penalty-fill" style="width:55%"></div>
+                  </div>
+                  <div class="penalty-labels"><span>Low</span><span>Medium</span><span>High</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deadline Timeline + Audit Log -->
+        <div class="g2">
+          <div class="card">
+            <div class="card-hd">
+              <h3>📅 Upcoming Deadlines</h3><button class="view-all" onclick="navigate('calendar')">Calendar →</button>
+            </div>
+            <div class="card-bd">
+              <div class="timeline">
+                <div class="tl-item">
+                  <div class="tl-dot red"></div>
+                  <div class="tl-date">Mar 26, 2026 — 16 days</div>
+                  <div class="tl-title">KYC Policy Update — Payment Aggregators</div>
+                  <span class="tl-tag b-rbi">RBI</span>
+                </div>
+                <div class="tl-item">
+                  <div class="tl-dot red"></div>
+                  <div class="tl-date">Mar 31, 2026 — 21 days</div>
+                  <div class="tl-title">Annual Return Filing (MGT-7A)</div>
+                  <span class="tl-tag b-mca">MCA</span>
+                </div>
+                <div class="tl-item">
+                  <div class="tl-dot yellow"></div>
+                  <div class="tl-date">Apr 2, 2026 — 23 days</div>
+                  <div class="tl-title">SEBI AIF Q4 Report Submission</div>
+                  <span class="tl-tag b-sebi">SEBI</span>
+                </div>
+                <div class="tl-item">
+                  <div class="tl-dot yellow"></div>
+                  <div class="tl-date">Apr 23, 2026 — 44 days</div>
+                  <div class="tl-title">Consent Manager Appointment (DPDP)</div>
+                  <span class="tl-tag b-dpdp">DPDP</span>
+                </div>
+                <div class="tl-item">
+                  <div class="tl-dot green"></div>
+                  <div class="tl-date">May 8, 2026 — 59 days</div>
+                  <div class="tl-title">TPAP Registration with NPCI</div>
+                  <span class="tl-tag b-rbi">RBI</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd">
+              <h3>🕵️ Audit Activity Log</h3>
+            </div>
+            <div class="card-bd" id="dash-log"></div>
+          </div>
+        </div>
+
+      </div><!-- /pg-dash -->
+
+
+      <!-- ══════════════ PAGE: ALERTS ══════════════ -->
+      <div class="page" id="pg-alerts">
+        <div class="ph">
+          <div class="ph-left">
+            <h1>Regulatory Alerts</h1>
+            <p>All regulations matched to your business profile</p>
+          </div>
+          <div class="ph-right">
+            <div class="sector-tabs">
+              <button class="s-tab active" data-sector="FinTech" onclick="setSector('FinTech')">FinTech</button>
+              <button class="s-tab" data-sector="SaaS" onclick="setSector('SaaS')">SaaS</button>
+              <button class="s-tab" data-sector="NBFC" onclick="setSector('NBFC')">NBFC</button>
+              <button class="s-tab" data-sector="EdTech" onclick="setSector('EdTech')">EdTech</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Chips -->
+        <div class="filter-bar">
+          <button class="filter-chip active" onclick="setAlertFilter(this,'All')">All</button>
+          <button class="filter-chip" onclick="setAlertFilter(this,'RBI')">RBI</button>
+          <button class="filter-chip" onclick="setAlertFilter(this,'SEBI')">SEBI</button>
+          <button class="filter-chip" onclick="setAlertFilter(this,'MCA')">MCA</button>
+          <button class="filter-chip" onclick="setAlertFilter(this,'TRAI')">TRAI</button>
+          <button class="filter-chip" onclick="setAlertFilter(this,'DPDP')">DPDP Act</button>
+          <button class="filter-chip" onclick="setAlertFilter(this,'HIGH')">🔴 High Urgency</button>
+          <button class="filter-chip" onclick="setAlertFilter(this,'MED')">🟡 Medium</button>
+          <button class="filter-chip" onclick="setAlertFilter(this,'LOW')">🟢 Low</button>
+          <button class="btn btn-outline" style="margin-left:auto; border-color:var(--green); color:var(--green); height:28px; padding:0 12px; font-size:0.75rem;" onclick="syncGovtFeeds()" id="sync-btn"><i class="fa fa-sync-alt"></i> Sync Live Govt Feeds</button>
+        </div>
+
+        <div class="card">
+          <div class="card-bd" id="alerts-list"></div>
+        </div>
+      </div><!-- /pg-alerts -->
+
+
+      <!-- ══════════════ PAGE: OBLIGATIONS ══════════════ -->
+      <div class="page" id="pg-obligations">
+        <div class="ph">
+          <div class="ph-left">
+            <h1>Compliance Obligations</h1>
+            <p>Track all your regulatory tasks, deadlines and owners</p>
+          </div>
+          <div class="ph-right">
+            <div class="sector-tabs">
+              <button class="s-tab active" data-sector="FinTech" onclick="setSector('FinTech')">FinTech</button>
+              <button class="s-tab" data-sector="SaaS" onclick="setSector('SaaS')">SaaS</button>
+              <button class="s-tab" data-sector="NBFC" onclick="setSector('NBFC')">NBFC</button>
+              <button class="s-tab" data-sector="EdTech" onclick="setSector('EdTech')">EdTech</button>
+            </div>
+            <button class="btn btn-primary" onclick="exportReport()"><i class="fa fa-download"></i> Export</button>
+          </div>
+        </div>
+        <div class="card">
+          <table class="obl-table">
+            <thead>
+              <tr>
+                <th>Obligation</th>
+                <th>Regulator</th>
+                <th>Deadline</th>
+                <th>Status</th>
+                <th>Owner</th>
+                <th>Priority</th>
+              </tr>
+            </thead>
+            <tbody id="obl-body"></tbody>
+          </table>
+        </div>
+      </div><!-- /pg-obligations -->
+
+
+      <!-- ══════════════ PAGE: CALENDAR ══════════════ -->
+      <div class="page" id="pg-calendar">
+        <div class="ph">
+          <div class="ph-left">
+            <h1>Deadline Calendar</h1>
+            <p>Visual view of all upcoming regulatory deadlines — March 2026</p>
+          </div>
+        </div>
+
+        <div class="g2">
+          <div class="cal">
+            <div class="cal-hd">
+              <h3>📅 March 2026</h3>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <span style="font-size:0.73rem;color:var(--text-muted)">
+                  <span style="color:var(--red)">●</span> Critical &nbsp;
+                  <span style="color:var(--yellow)">●</span> Upcoming &nbsp;
+                  <span style="color:var(--green)">●</span> Done
+                </span>
+                <div class="cal-nav">
+                  <button class="cal-btn" onclick="calPrev()" title="Previous month"><i
+                      class="fa fa-chevron-left"></i></button>
+                  <button class="cal-btn" onclick="calNext()" title="Next month"><i
+                      class="fa fa-chevron-right"></i></button>
+                </div>
+              </div>
+            </div>
+            <div class="cal-grid">
+              <div class="cal-dow">Sun</div>
+              <div class="cal-dow">Mon</div>
+              <div class="cal-dow">Tue</div>
+              <div class="cal-dow">Wed</div>
+              <div class="cal-dow">Thu</div>
+              <div class="cal-dow">Fri</div>
+              <div class="cal-dow">Sat</div>
+              <div id="cal-days" style="display:contents"></div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <div class="card">
+              <div class="card-hd">
+                <h3>Deadlines This Month</h3>
+              </div>
+              <div class="card-bd">
+                <div class="timeline">
+                  <div class="tl-item">
+                    <div class="tl-dot red"></div>
+                    <div class="tl-date">Mar 15 — Board Resolution</div>
+                    <div class="tl-title">Compliance Update Approval</div>
+                    <span class="tl-tag b-mca">MCA</span>
+                  </div>
+                  <div class="tl-item">
+                    <div class="tl-dot red"></div>
+                    <div class="tl-date">Mar 26 — KYC Policy</div>
+                    <div class="tl-title">Payment Aggregator KYC update</div>
+                    <span class="tl-tag b-rbi">RBI</span>
+                  </div>
+                  <div class="tl-item">
+                    <div class="tl-dot red"></div>
+                    <div class="tl-date">Mar 28 — Credit Bureau</div>
+                    <div class="tl-title">Bureau Integration (NBFCs)</div>
+                    <span class="tl-tag b-rbi">RBI</span>
+                  </div>
+                  <div class="tl-item">
+                    <div class="tl-dot red"></div>
+                    <div class="tl-date">Mar 31 — MGT-7A Filing</div>
+                    <div class="tl-title">Annual Return — MCA Portal</div>
+                    <span class="tl-tag b-mca">MCA</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-hd">
+                <h3>April 2026 Deadlines</h3>
+              </div>
+              <div class="card-bd">
+                <div class="timeline">
+                  <div class="tl-item">
+                    <div class="tl-dot yellow"></div>
+                    <div class="tl-date">Apr 2 — SEBI AIF Report</div>
+                    <div class="tl-title">AIF Category II Q4 Report</div>
+                    <span class="tl-tag b-sebi">SEBI</span>
+                  </div>
+                  <div class="tl-item">
+                    <div class="tl-dot yellow"></div>
+                    <div class="tl-date">Apr 8 — Rate Cap Update</div>
+                    <div class="tl-title">NBFC-MFI interest rate revisions</div>
+                    <span class="tl-tag b-rbi">RBI</span>
+                  </div>
+                  <div class="tl-item">
+                    <div class="tl-dot yellow"></div>
+                    <div class="tl-date">Apr 22 — DPDP Minor Data</div>
+                    <div class="tl-title">Parental Consent Flow (EdTech)</div>
+                    <span class="tl-tag b-dpdp">DPDP</span>
+                  </div>
+                  <div class="tl-item">
+                    <div class="tl-dot yellow"></div>
+                    <div class="tl-date">Apr 23 — Consent Manager</div>
+                    <div class="tl-title">DPDP Consent Manager Appt.</div>
+                    <span class="tl-tag b-dpdp">DPDP</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /pg-calendar -->
+
+
+      <!-- ══════════════ PAGE: RISK & PENALTIES ══════════════ -->
+      <div class="page" id="pg-risk">
+        <div class="ph">
+          <div class="ph-left">
+            <h1>Risk & Penalty Exposure</h1>
+            <p>Financial risk from non-compliance with pending obligations</p>
+          </div>
+          <div class="ph-right">
+            <div class="sector-tabs">
+              <button class="s-tab active" data-sector="FinTech" onclick="setSector('FinTech')">FinTech</button>
+              <button class="s-tab" data-sector="SaaS" onclick="setSector('SaaS')">SaaS</button>
+              <button class="s-tab" data-sector="NBFC" onclick="setSector('NBFC')">NBFC</button>
+              <button class="s-tab" data-sector="EdTech" onclick="setSector('EdTech')">EdTech</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="risk-sector-grid">
+          <div class="risk-item">
+            <h4>Total Penalty at Risk</h4>
+            <div class="risk-val" style="color:var(--red)">₹3.1 Crore</div>
+            <div style="font-size:0.73rem;color:var(--text-muted);margin-top:4px">If all pending RBI obligations missed
+            </div>
+          </div>
+          <div class="risk-item">
+            <h4>Overdue Obligations</h4>
+            <div class="risk-val" style="color:var(--yellow)">2</div>
+            <div style="font-size:0.73rem;color:var(--text-muted);margin-top:4px">KYC Update + Credit Bureau Integration
+            </div>
+          </div>
+          <div class="risk-item">
+            <h4>Days to Next Deadline</h4>
+            <div class="risk-val" style="color:var(--accent)">16 days</div>
+            <div style="font-size:0.73rem;color:var(--text-muted);margin-top:4px">KYC Policy — March 26, 2026</div>
+          </div>
+        </div>
+
+        <div class="g2">
+          <div class="card">
+            <div class="card-hd">
+              <h3>⚠️ Penalty Breakdown by Regulator</h3>
+            </div>
+            <div class="card-bd">
+              <div style="margin-bottom:18px">
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                  <span style="font-size:0.83rem;font-weight:600">RBI — KYC + TPAP violations</span>
+                  <span style="font-weight:700;color:var(--red)">₹1.5Cr</span>
+                </div>
+                <div class="prog-bg">
+                  <div class="prog-fill" style="width:85%;background:linear-gradient(90deg,var(--red),#f87171)"></div>
+                </div>
+              </div>
+              <div style="margin-bottom:18px">
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                  <span style="font-size:0.83rem;font-weight:600">DPDP Act — Consent Manager</span>
+                  <span style="font-weight:700;color:var(--red)">₹1.0Cr</span>
+                </div>
+                <div class="prog-bg">
+                  <div class="prog-fill" style="width:70%;background:linear-gradient(90deg,#a855f7,#c084fc)"></div>
+                </div>
+              </div>
+              <div style="margin-bottom:18px">
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                  <span style="font-size:0.83rem;font-weight:600">MCA — Annual Return Delay</span>
+                  <span style="font-weight:700;color:var(--yellow)">₹0.4Cr</span>
+                </div>
+                <div class="prog-bg">
+                  <div class="prog-fill" style="width:40%;background:linear-gradient(90deg,var(--yellow),#fcd34d)">
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                  <span style="font-size:0.83rem;font-weight:600">SEBI — AIF Reporting</span>
+                  <span style="font-weight:700;color:var(--green)">₹0.2Cr</span>
+                </div>
+                <div class="prog-bg">
+                  <div class="prog-fill" style="width:20%;background:linear-gradient(90deg,var(--green),#34d399)"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd">
+              <h3>🛡️ Risk Reduction Actions</h3>
+            </div>
+            <div class="card-bd">
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <div
+                  style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:12px">
+                  <div style="font-size:0.8rem;font-weight:700;color:var(--red);margin-bottom:4px">🔴 Immediate — KYC
+                    Policy (Mar 26)</div>
+                  <div style="font-size:0.78rem;color:var(--text-muted)">Assign Legal team today. Saves ₹1Cr penalty.
+                  </div>
+                </div>
+                <div
+                  style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:12px">
+                  <div style="font-size:0.8rem;font-weight:700;color:var(--red);margin-bottom:4px">🔴 Urgent — MGT-7A
+                    Filing (Mar 31)</div>
+                  <div style="font-size:0.78rem;color:var(--text-muted)">Coordinate CS & CFO. Fine: ₹100/day after
+                    deadline.</div>
+                </div>
+                <div
+                  style="background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:12px">
+                  <div style="font-size:0.8rem;font-weight:700;color:var(--yellow);margin-bottom:4px">🟡 Plan — DPDP
+                    Consent Manager (Apr 23)</div>
+                  <div style="font-size:0.78rem;color:var(--text-muted)">Add to next engineering sprint. Saves up to
+                    ₹250Cr.</div>
+                </div>
+                <div
+                  style="background:rgba(16,185,129,0.07);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:12px">
+                  <div style="font-size:0.8rem;font-weight:700;color:var(--green);margin-bottom:4px">✅ Low Risk — SEBI
+                    AIF Q4 (Apr 15)</div>
+                  <div style="font-size:0.78rem;color:var(--text-muted)">On track. Assign CFO to complete report by Apr
+                    10.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /pg-risk -->
+
+
+      <!-- ══════════════ PAGE: SETTINGS ══════════════ -->
+      <div class="page" id="pg-settings">
+        <div class="ph">
+          <div class="ph-left">
+            <h1>Settings & Business Profile</h1>
+            <p>Configure your startup profile to get relevant regulatory alerts</p>
+          </div>
+        </div>
+
+        <div class="settings-grid">
+          <!-- Business Profile -->
+          <div class="setting-card">
+            <h3><i class="fa fa-building" style="color:var(--accent)"></i> Business Profile</h3>
+            <label
+              style="font-size:0.73rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px">Company
+              Name</label>
+            <input class="form-input" value="Arjun's FinTech Pvt Ltd" type="text" />
+            <label
+              style="font-size:0.73rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px">Business
+              Sector</label>
+            <select class="form-input">
+              <option selected>FinTech / Payments</option>
+              <option>SaaS / Technology</option>
+              <option>NBFC / Lending</option>
+              <option>EdTech</option>
+              <option>HealthTech</option>
+              <option>InsurTech</option>
+            </select>
+            <label
+              style="font-size:0.73rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px">Licences
+              Held</label>
+            <select class="form-input">
+              <option selected>Payment Aggregator (RBI)</option>
+              <option>NBFC Licence</option>
+              <option>PPI Wallets</option>
+              <option>SEBI AIF Registered</option>
+            </select>
+            <label
+              style="font-size:0.73rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px">Headquarters</label>
+            <input class="form-input" value="Mumbai, Maharashtra" type="text" />
+            <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px"
+              onclick="saveProfile()"><i class="fa fa-save"></i> Save Profile</button>
+          </div>
+
+          <!-- Alert Preferences -->
+          <div class="setting-card">
+            <h3><i class="fa fa-bell" style="color:var(--yellow)"></i> Alert Preferences</h3>
+            <div class="setting-row">
+              <div>
+                <div class="setting-lbl">Email Alerts</div>
+                <div class="setting-sub">Critical + High urgency to all team</div>
+              </div>
+              <label class="toggle"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-lbl">Slack Notifications</div>
+                <div class="setting-sub">Sends to #compliance channel</div>
+              </div>
+              <label class="toggle"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-lbl">WhatsApp Alerts</div>
+                <div class="setting-sub">Critical alerts to CEO & Legal</div>
+              </div>
+              <label class="toggle"><input type="checkbox" /><span class="toggle-slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-lbl">7-Day Deadline Reminders</div>
+                <div class="setting-sub">Reminders before each deadline</div>
+              </div>
+              <label class="toggle"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-lbl">Weekly Digest Email</div>
+                <div class="setting-sub">Summary every Monday 9AM IST</div>
+              </div>
+              <label class="toggle"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-lbl">AI Summary on New Alerts</div>
+                <div class="setting-sub">Plain-English summary via AI</div>
+              </div>
+              <label class="toggle"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+
+          <!-- Team Members -->
+          <div class="setting-card">
+            <h3><i class="fa fa-users" style="color:var(--green)"></i> Team & Role Routing</h3>
+            <div class="setting-row">
+              <div>
+                <div class="setting-lbl">Arjun Kumar — CEO</div>
+                <div class="setting-sub">Receives: Strategic & High-impact alerts</div>
+              </div>
+              <span class="pill p-done">Active</span>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-lbl">Priya Sharma — Legal</div>
+                <div class="setting-sub">Receives: All RBI, SEBI, MCA alerts</div>
+              </div>
+              <span class="pill p-done">Active</span>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-lbl">Raj Mehta — CFO</div>
+                <div class="setting-sub">Receives: filing deadlines, GST, MCA</div>
+              </div>
+              <span class="pill p-done">Active</span>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-lbl">Ankit T. — CTO</div>
+                <div class="setting-sub">Receives: DPDP, tech policy, API mandates</div>
+              </div>
+              <span class="pill p-done">Active</span>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-lbl">Kavya N. — CS</div>
+                <div class="setting-sub">Receives: MCA filings, board resolutions</div>
+              </div>
+              <span class="pill p-done">Active</span>
+            </div>
+            <button class="btn btn-outline" style="margin-top:10px" onclick="openAddMemberModal()"><i
+                class="fa fa-plus"></i> Add Team Member</button>
+          </div>
+
+          <!-- Integrations -->
+          <div class="setting-card">
+            <h3><i class="fa fa-plug" style="color:var(--accent2)"></i> Integrations</h3>
+            <div class="setting-row">
+              <div>
+                <div class="setting-lbl">Slack Workspace</div>
+                <div class="setting-sub">arjunfintech.slack.com · #compliance</div>
+              </div>
+              <span class="pill p-done">Connected</span>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-lbl">Google Calendar</div>
+                <div class="setting-sub">Sync deadlines to team calendars</div>
+              </div>
+              <span class="pill p-done">Connected</span>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-lbl">Jira / Linear</div>
+                <div class="setting-sub">Auto-create tickets for obligations</div>
+              </div>
+              <span class="pill p-pending">Not Setup</span>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-lbl">WhatsApp Business API</div>
+                <div class="setting-sub">Send critical alerts on WhatsApp</div>
+              </div>
+              <span class="pill p-pending">Not Setup</span>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-lbl">SEBI / RBI Portal API</div>
+                <div class="setting-sub">Direct regulatory data integration</div>
+              </div>
+              <span class="pill p-done">Connected</span>
+            </div>
+          </div>
+        </div>
+      </div><!-- /pg-settings -->
+
+    </main>
+  </div><!-- /app -->
+
+
+  <!-- ═══════════════════════════ REGULATION DETAIL MODAL ══════════════════════ -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <div class="modal-hd">
+        <h3 id="m-title">Regulation Detail</h3>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-bd">
+        <div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;" id="m-reg"></div>
+        <div class="modal-row">
+          <div class="modal-field"><label>Published</label><span id="m-date"></span></div>
+          <div class="modal-field"><label>Deadline</label><span id="m-dl"
+              style="color:var(--red);font-weight:700"></span></div>
+          <div class="modal-field"><label>Penalty at Risk</label><span id="m-pen" style="color:var(--red)"></span></div>
+          <div class="modal-field"><label>Jurisdiction</label><span id="m-juris"></span></div>
+        </div>
+        <div class="modal-section">
+          <h4>Full Description</h4>
+          <p id="m-desc"></p>
+        </div>
+        <div class="ai-panel" style="margin-bottom:0">
+          <div class="ai-hd"><i class="fa fa-robot"></i> AI Plain-English Summary</div>
+          <div class="ai-body" id="m-summary"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="openCreateOblModal()"><i class="fa fa-tasks"></i> ➡️ Add to Action
+            Items (Create Obligation)</button>
+          <button class="btn btn-outline" onclick="notifyAlert(event, currentModal.id)"><i class="fa fa-envelope"></i>
+            Send Email Alert</button>
+          <button class="btn btn-outline" onclick="closeModal()"><i class="fa fa-times"></i> Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ FLOATING ALERT ════════════════════════════════ -->
+  <div id="floatAlert">
+    <div class="fa-hd">
+      <div class="fa-dot"></div>
+      <div class="fa-title" id="fa-title">🚨 New Regulation Detected</div>
+      <button class="fa-close" onclick="closeFloat()">✕</button>
+    </div>
+    <div class="fa-body" id="fa-body">RBI has issued mandatory TPAP registration for all UPI payment apps.</div>
+  </div>
+
+  <!-- ═══════════════════════════ TOAST CONTAINER ═════════════════════════════ -->
+  <div id="toast-container"></div>
+
+  <!-- ═══════════════════════════ CREATE OBLIGATION MODAL ═════════════════════ -->
+  <div class="modal-overlay" id="cob-modal">
+    <div class="modal">
+      <div class="modal-hd">
+        <h3>📋 Create Obligation</h3>
+        <button class="modal-close" onclick="closeCreateOblModal()">✕</button>
+      </div>
+      <div class="modal-bd">
+        <div class="form-grid">
+          <div class="form-group form-group-full">
+            <label>Obligation Title *</label>
+            <input class="form-input" id="cob-title" type="text" placeholder="e.g. KYC Policy Document Revision" />
+          </div>
+          <div class="form-group">
+            <label>Regulator *</label>
+            <select class="form-input" id="cob-reg">
+              <option>RBI</option>
+              <option>SEBI</option>
+              <option>MCA</option>
+              <option>TRAI</option>
+              <option>DPDP</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Deadline *</label>
+            <input class="form-input" id="cob-dl" type="text" placeholder="e.g. Mar 31, 2026" />
+          </div>
+          <div class="form-group">
+            <label>Owner</label>
+            <select class="form-input" id="cob-owner">
+              <option>CEO</option>
+              <option>Legal</option>
+              <option>CFO</option>
+              <option>CTO</option>
+              <option>CS</option>
+              <option>Tech</option>
+              <option>Board</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Priority</label>
+            <select class="form-input" id="cob-priority">
+              <option>Critical</option>
+              <option>High</option>
+              <option selected>Medium</option>
+              <option>Low</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Penalty at Risk</label>
+            <input class="form-input" id="cob-penalty" type="text" placeholder="e.g. ₹50L" />
+          </div>
+          <div class="form-group form-group-full">
+            <label>Notes / Source</label>
+            <input class="form-input" id="cob-notes" type="text" placeholder="e.g. RBI Circular No. 2026-03-08" />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-primary" onclick="submitCreateObl()"><i class="fa fa-plus"></i> Add Obligation</button>
+          <button class="btn btn-outline" onclick="closeCreateOblModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ ADD TEAM MEMBER MODAL ══════════════════════ -->
+  <div class="modal-overlay" id="tm-modal">
+    <div class="modal" style="max-width:420px">
+      <div class="modal-hd">
+        <h3>👤 Add Team Member</h3>
+        <button class="modal-close" onclick="closeAddMemberModal()">✕</button>
+      </div>
+      <div class="modal-bd">
+        <div class="form-group" style="margin-bottom:10px">
+          <label>Full Name *</label>
+          <input class="form-input" id="tm-name" type="text" placeholder="e.g. Sneha Kapoor" />
+        </div>
+        <div class="form-group" style="margin-bottom:10px">
+          <label>Role</label>
+          <select class="form-input" id="tm-role-sel">
+            <option>CEO</option>
+            <option>Legal Counsel</option>
+            <option>CFO</option>
+            <option>CTO</option>
+            <option>Company Secretary</option>
+            <option>Compliance Officer</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:10px">
+          <label>Email *</label>
+          <input class="form-input" id="tm-email" type="email" placeholder="e.g. sneha@company.com" />
+        </div>
+        <div class="form-group" style="margin-bottom:10px">
+          <label>Receives Alerts For</label>
+          <select class="form-input" id="tm-receives">
+            <option>All regulatory alerts</option>
+            <option>Critical &amp; High urgency only</option>
+            <option>RBI alerts only</option>
+            <option>SEBI alerts only</option>
+            <option>MCA filings only</option>
+            <option>DPDP / Tech policy only</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-primary" onclick="submitAddMember()"><i class="fa fa-user-plus"></i> Add
+            Member</button>
+          <button class="btn btn-outline" onclick="closeAddMemberModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ AI TESTER MODAL ═════════════════════════════ -->
+  <div class="modal-overlay" id="ai-test-modal">
+    <div class="modal"
+      style="max-width:550px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(16px); border: 1px solid rgba(139, 92, 246, 0.3);">
+      <div class="modal-hd">
+        <h3
+          style="background:linear-gradient(90deg, #3b82f6, #a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+          <i class="fa fa-robot" style="-webkit-text-fill-color:#8b5cf6"></i> Gemini AI Document Analyzer</h3>
+        <button class="modal-close" onclick="closeAITestModal()">✕</button>
+      </div>
+      <div class="modal-bd">
+        <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:15px">Paste complex legal text or a regulation
+          description here. The <b>Live Gemini AI</b> will instantly read it and generate a 2-line plain-English summary
+          right before your eyes.</p>
+        <div class="form-group" style="margin-bottom:12px">
+          <label style="color:var(--text-light)">Regulation/Document Title</label>
+          <input class="form-input" id="ait-title" type="text"
+            placeholder="e.g. RBI Master Direction on Cyber Security 2026" />
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label style="color:var(--text-light)">Paste Long Legal Text (Raw Description from PDF)</label>
+          <textarea class="form-input" id="ait-desc" style="height:120px"
+            placeholder="Paste all the complex regulation text you want Gemini to summarize here..."></textarea>
+        </div>
+        <button class="btn btn-primary"
+          style="width:100%;justify-content:center;margin-bottom:15px; background:linear-gradient(90deg, #3b82f6, #8b5cf6); border:none;"
+          onclick="runAITest()" id="ait-btn"><i class="fa fa-magic"></i> Generate AI Summary</button>
+
+        <div class="ai-panel"
+          style="margin-bottom:0; background:rgba(0,0,0,0.3); border:1px solid rgba(139, 92, 246, 0.2);">
+          <div class="ai-hd" style="font-size:0.8rem;color:var(--text-muted)">Gemini AI Output:</div>
+          <div class="ai-body" id="ait-output" style="min-height:40px; color:var(--text-light); font-style:italic">
+            Waiting for input...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="api.js"></script>
+  <script src="app.js"></script>
+  <script>
+    // Extra helper for sidebar regulator filter nav
+    function setAlertFilterNav(reg) {
+      navigate('alerts');
+      alertFilter = reg;
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      renderAlertsPage();
+    }
+  </script>
+</body>
+
+</html>

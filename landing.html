@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RegAlert — AI-Powered Compliance for Indian Startups</title>
+    <meta name="description"
+        content="RegAlert automates regulatory compliance for Indian startups. Track SEBI, RBI, MCA, DPDP rules with AI-powered summaries and deadline alerts.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #030712;
+            --bg-secondary: #0f172a;
+            --bg-card: rgba(15, 23, 42, 0.6);
+            --border: rgba(148, 163, 184, 0.1);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+            --accent-red: #ef4444;
+            --gradient-main: linear-gradient(135deg, #3b82f6, #8b5cf6, #06b6d4);
+            --gradient-glow: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.1));
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── ANIMATED BACKGROUND ─────────────────────────────────────────── */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(148, 163, 184, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(148, 163, 184, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: 0;
+            pointer-events: none;
+            animation: orbFloat 15s ease-in-out infinite;
+        }
+
+        .bg-orb-1 {
+            width: 600px;
+            height: 600px;
+            top: -200px;
+            right: -150px;
+            background: rgba(59, 130, 246, 0.12);
+        }
+
+        .bg-orb-2 {
+            width: 500px;
+            height: 500px;
+            bottom: -100px;
+            left: -200px;
+            background: rgba(139, 92, 246, 0.1);
+            animation-delay: -5s;
+        }
+
+        .bg-orb-3 {
+            width: 400px;
+            height: 400px;
+            top: 50%;
+            left: 40%;
+            background: rgba(6, 182, 212, 0.06);
+            animation-delay: -10s;
+        }
+
+        @keyframes orbFloat {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            33% {
+                transform: translate(30px, -30px) scale(1.05);
+            }
+
+            66% {
+                transform: translate(-20px, 20px) scale(0.95);
+            }
+        }
+
+        /* ── NAVBAR ───────────────────────────────────────────────────────── */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            background: rgba(3, 7, 18, 0.7);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+
+        .navbar.scrolled {
+            background: rgba(3, 7, 18, 0.95);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .nav-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            font-size: 1.4rem;
+            font-weight: 800;
+        }
+
+        .nav-brand-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--gradient-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: white;
+        }
+
+        .nav-brand-text {
+            color: var(--text-primary);
+        }
+
+        .nav-brand-text span {
+            color: var(--accent-blue);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent-blue);
+            transition: width 0.3s;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn-ghost {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.3s;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .btn-ghost:hover {
+            color: var(--text-primary);
+            border-color: rgba(148, 163, 184, 0.3);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .btn-primary-nav {
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            background: var(--accent-blue);
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary-nav:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        }
+
+        /* ── HERO ─────────────────────────────────────────────────────────── */
+        .hero {
+            position: relative;
+            z-index: 1;
+            padding: 140px 24px 80px;
+            text-align: center;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--accent-blue);
+            margin-bottom: 32px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .hero-badge-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero h1 {
+            font-size: clamp(2.8rem, 6vw, 5rem);
+            font-weight: 900;
+            line-height: 1.08;
+            margin-bottom: 24px;
+            letter-spacing: -2px;
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+
+        .hero-gradient-text {
+            background: var(--gradient-main);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 650px;
+            margin: 0 auto 48px;
+            line-height: 1.7;
+            animation: fadeInUp 0.8s ease 0.4s both;
+        }
+
+        .hero-cta {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 60px;
+            animation: fadeInUp 0.8s ease 0.6s both;
+        }
+
+        .hero-mockup-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            animation: fadeInUp 0.8s ease 0.8s both;
+        }
+
+        .hero-mockup {
+            width: 100%;
+            height: 450px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 40px rgba(59, 130, 246, 0.2);
+            overflow: hidden;
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+
+        .mockup-topar {
+            height: 40px;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 8px;
+        }
+
+        .mockup-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ef4444;
+        }
+
+        .mockup-dot:nth-child(2) {
+            background: #f59e0b;
+        }
+
+        .mockup-dot:nth-child(3) {
+            background: #10b981;
+        }
+
+        .mockup-body {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .mockup-main-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            height: 150px;
+            margin-bottom: 20px;
+        }
+
+        .mockup-mini-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            height: 60px;
+            margin-bottom: 10px;
+        }
+
+        .btn-hero-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 36px;
+            border-radius: 14px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            text-decoration: none;
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.35);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .btn-hero-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(59, 130, 246, 0.5);
+        }
+
+        .btn-hero-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 36px;
+            border-radius: 14px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .btn-hero-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(148, 163, 184, 0.25);
+        }
+
+        /* ── STATS BAR ────────────────────────────────────────────────────── */
+        .stats-bar {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto 80px;
+            padding: 0 24px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2px;
+            background: var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease 0.8s both;
+        }
+
+        .stat-item {
+            background: var(--bg-secondary);
+            padding: 28px 20px;
+            text-align: center;
+        }
+
+        .stat-item:first-child {
+            border-radius: 16px 0 0 16px;
+        }
+
+        .stat-item:last-child {
+            border-radius: 0 16px 16px 0;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 800;
+            background: var(--gradient-main);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* ── REGULATORS STRIP ─────────────────────────────────────────────── */
+        .reg-strip {
+            position: relative;
+            z-index: 1;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            padding: 40px 24px;
+            text-align: center;
+            margin-bottom: 100px;
+        }
+
+        .reg-strip-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--text-secondary);
+            margin-bottom: 28px;
+        }
+
+        .reg-logos {
+            display: flex;
+            justify-content: center;
+            gap: 48px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .reg-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: rgba(241, 245, 249, 0.4);
+            transition: color 0.3s;
+        }
+
+        .reg-logo:hover {
+            color: rgba(241, 245, 249, 0.8);
+        }
+
+        .reg-logo i {
+            font-size: 1.4rem;
+        }
+
+        /* ── FEATURES ─────────────────────────────────────────────────────── */
+        .features-section {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px 120px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 72px;
+        }
+
+        .section-eyebrow {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--accent-blue);
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .section-header h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 16px;
+        }
+
+        .section-header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 24px;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 40px 32px;
+            border-radius: 20px;
+            transition: all 0.4s cubic-bezier(.4, 0, .2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-main);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(59, 130, 246, 0.2);
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon-wrap {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 24px;
+        }
+
+        .fi-blue {
+            background: rgba(59, 130, 246, 0.12);
+            color: var(--accent-blue);
+        }
+
+        .fi-purple {
+            background: rgba(139, 92, 246, 0.12);
+            color: var(--accent-purple);
+        }
+
+        .fi-green {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--accent-green);
+        }
+
+        .fi-cyan {
+            background: rgba(6, 182, 212, 0.12);
+            color: var(--accent-cyan);
+        }
+
+        .fi-orange {
+            background: rgba(245, 158, 11, 0.12);
+            color: var(--accent-orange);
+        }
+
+        .fi-red {
+            background: rgba(239, 68, 68, 0.12);
+            color: var(--accent-red);
+        }
+
+        .feature-card h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        /* ── HOW IT WORKS ─────────────────────────────────────────────────── */
+        .how-section {
+            position: relative;
+            z-index: 1;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 24px 120px;
+        }
+
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .step {
+            display: flex;
+            gap: 32px;
+            align-items: flex-start;
+            position: relative;
+            padding: 40px 0;
+        }
+
+        .step-num {
+            flex-shrink: 0;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--gradient-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: white;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-line {
+            position: absolute;
+            left: 28px;
+            top: 96px;
+            bottom: -40px;
+            width: 2px;
+            background: linear-gradient(to bottom, rgba(59, 130, 246, 0.3), transparent);
+        }
+
+        .step:last-child .step-line {
+            display: none;
+        }
+
+        .step-content h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .step-content p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* ── CTA SECTION ──────────────────────────────────────────────────── */
+        .cta-section {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto 100px;
+            padding: 0 24px;
+        }
+
+        .cta-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 72px 48px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+        }
+
+        .cta-box h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .cta-box p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 36px;
+            position: relative;
+        }
+
+        /* ── FOOTER ────────────────────────────────────────────────────────── */
+        .footer {
+            position: relative;
+            z-index: 1;
+            border-top: 1px solid var(--border);
+            padding: 40px 24px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .footer a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+
+        /* ── RESPONSIVE ───────────────────────────────────────────────────── */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2.8rem;
+            }
+
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .step {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .step-line {
+                display: none;
+            }
+
+            .reg-logos {
+                gap: 24px;
+            }
+
+            .cta-box {
+                padding: 48px 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-grid"></div>
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+
+    <!-- ── NAVBAR ──────────────────────────────────────────────────────── -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-inner">
+            <a href="/" class="nav-brand">
+                <div class="nav-brand-icon"><i class="fa fa-balance-scale"></i></div>
+                <div class="nav-brand-text">Reg<span>Alert</span></div>
+            </a>
+            <div class="nav-links">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#how" class="nav-link">How It Works</a>
+            </div>
+            <div class="nav-actions">
+                <a href="login.html" class="btn-ghost">Log In</a>
+                <a href="login.html?mode=register" class="btn-primary-nav">Get Started Free</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ── HERO ────────────────────────────────────────────────────────── -->
+    <section class="hero">
+        <div class="hero-badge">
+            <div class="hero-badge-dot"></div>
+            AI-Powered Compliance Intelligence
+        </div>
+        <h1>
+            Never Miss a<br>
+            <span class="hero-gradient-text">Regulatory Deadline</span><br>
+            Again.
+        </h1>
+        <p>
+            RegAlert monitors SEBI, RBI, MCA &amp; DPDP regulations in real-time using Gemini AI.
+            Get plain-English summaries, automatic deadline tracking, and penalty risk alerts — all in one secure
+            dashboard.
+        </p>
+        <div class="hero-cta">
+            <a href="login.html?mode=register" class="btn-hero-primary">
+                Start Free Trial <i class="fa fa-arrow-right"></i>
+            </a>
+            <a href="#features" class="btn-hero-secondary">
+                <i class="fa fa-play-circle"></i> See How It Works
+            </a>
+        </div>
+
+        <div class="hero-mockup-wrapper">
+            <div class="hero-mockup">
+                <div class="mockup-topar">
+                    <div class="mockup-dot"></div>
+                    <div class="mockup-dot"></div>
+                    <div class="mockup-dot"></div>
+                    <div style="margin-left:auto; font-size:0.75rem; color:var(--text-secondary); opacity:0.5;">
+                        app.regalert.in</div>
+                </div>
+                <div class="mockup-body"
+                    style="padding: 0; height: calc(100% - 40px); overflow: hidden; display: block;">
+                    <img src="mockup.png" alt="Dashboard Mockup"
+                        style="width: 100%; height: 100%; object-fit: cover; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── STATS BAR ───────────────────────────────────────────────────── -->
+    <div class="stats-bar">
+        <div class="stat-item">
+            <div class="stat-number">500+</div>
+            <div class="stat-label">Regulations Tracked</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">₹50Cr+</div>
+            <div class="stat-label">Penalties Prevented</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">24/7</div>
+            <div class="stat-label">AI Monitoring</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">4</div>
+            <div class="stat-label">Regulators Covered</div>
+        </div>
+    </div>
+
+    <!-- ── REGULATORS STRIP ────────────────────────────────────────────── -->
+    <div class="reg-strip">
+        <div class="reg-strip-label">Tracking Real-Time Regulations From</div>
+        <div class="reg-logos">
+            <div class="reg-logo"><i class="fa fa-university"></i> RBI</div>
+            <div class="reg-logo"><i class="fa fa-chart-line"></i> SEBI</div>
+            <div class="reg-logo"><i class="fa fa-building-columns"></i> MCA</div>
+            <div class="reg-logo"><i class="fa fa-tower-broadcast"></i> TRAI</div>
+            <div class="reg-logo"><i class="fa fa-shield-halved"></i> DPDP</div>
+        </div>
+    </div>
+
+    <!-- ── FEATURES ────────────────────────────────────────────────────── -->
+    <section class="features-section" id="features">
+        <div class="section-header">
+            <div class="section-eyebrow">Features</div>
+            <h2>Everything Your Startup Needs</h2>
+            <p>Replace spreadsheets, expensive consultants, and manual government website checking with one intelligent
+                platform.</p>
+        </div>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon-wrap fi-blue"><i class="fa fa-bolt"></i></div>
+                <h3>Real-Time Regulatory Alerts</h3>
+                <p>Instant notifications when RBI, SEBI, or MCA issues a new circular affecting your sector. Never be
+                    blindsided again.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon-wrap fi-purple"><i class="fa fa-robot"></i></div>
+                <h3>AI Plain-English Summaries</h3>
+                <p>Complex 50-page legal documents are summarized by Gemini AI into 2 sentences your CEO can act on
+                    immediately.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon-wrap fi-green"><i class="fa fa-list-check"></i></div>
+                <h3>Obligation Tracker</h3>
+                <p>Turn regulations into assignable tasks with deadlines, priority tags, and penalty risk tracking for
+                    every compliance item.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon-wrap fi-cyan"><i class="fa fa-calendar-check"></i></div>
+                <h3>Deadline Calendar</h3>
+                <p>Visual calendar view of all upcoming filings and compliance deadlines, with automated email reminders
+                    7 days before.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon-wrap fi-orange"><i class="fa fa-chart-pie"></i></div>
+                <h3>Risk Score Dashboard</h3>
+                <p>Live compliance health score calculated from your actual pending obligations, with regulator-wise
+                    breakdown charts.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon-wrap fi-red"><i class="fa fa-bell"></i></div>
+                <h3>Email &amp; Team Alerts</h3>
+                <p>Automated deadline reminders via email to your CFO, Company Secretary, and legal team. Never miss a
+                    filing date.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── HOW IT WORKS ────────────────────────────────────────────────── -->
+    <section class="how-section" id="how">
+        <div class="section-header">
+            <div class="section-eyebrow">How It Works</div>
+            <h2>Get Compliant in 3 Steps</h2>
+            <p>From signup to full regulatory coverage in under 5 minutes.</p>
+        </div>
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-line"></div>
+                <div class="step-content">
+                    <h3>Create Your Workspace</h3>
+                    <p>Sign up with your company name and sector. RegAlert immediately loads the relevant regulations
+                        for FinTech, SaaS, NBFC, or EdTech startups.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-line"></div>
+                <div class="step-content">
+                    <h3>AI Scans &amp; Summarizes</h3>
+                    <p>Our Gemini-powered AI monitors RBI, SEBI, MCA circulars 24/7. New alerts are generated
+                        automatically and summarized in plain English you can actually understand.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-content">
+                    <h3>Track, Assign &amp; Stay Compliant</h3>
+                    <p>Convert alerts into actionable tasks, assign them to your legal or compliance team, and track
+                        deadlines. Get email reminders before every due date. Zero penalties, zero stress.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── CTA ─────────────────────────────────────────────────────────── -->
+    <section class="cta-section">
+        <div class="cta-box">
+            <h2>Ready to Automate Compliance?</h2>
+            <p>Join Indian startups who stopped worrying about regulatory penalties.</p>
+            <a href="login.html?mode=register" class="btn-hero-primary" style="position:relative;">
+                Get Started Free <i class="fa fa-arrow-right"></i>
+            </a>
+        </div>
+    </section>
+
+    <!-- ── FOOTER ──────────────────────────────────────────────────────── -->
+    <footer class="footer">
+        <p>&copy; 2026 <a href="/">RegAlert</a> — AI-Powered Regulatory Compliance for Indian Startups. Built with ❤️
+        </p>
+    </footer>
+
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+        });
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+            a.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RegAlert — Secure Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #030712;
+            --bg-card: rgba(15, 23, 42, 0.7);
+            --border: rgba(148, 163, 184, 0.15);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            margin: 0;
+            background: var(--bg-primary);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .auth-layout {
+            display: flex;
+            width: 100%;
+        }
+
+        .auth-left {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .auth-right {
+            flex: 1;
+            background: linear-gradient(135deg, rgba(3, 7, 18, 0.8), rgba(15, 23, 42, 0.95)), url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80');
+            background-size: cover;
+            background-position: center;
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px;
+        }
+
+        @media (max-width: 800px) {
+            .auth-right {
+                display: none;
+            }
+        }
+
+        .back-nav {
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.3s;
+        }
+
+        .back-nav:hover {
+            color: var(--text-main);
+        }
+
+        .auth-box {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .auth-header {
+            margin-bottom: 30px;
+        }
+
+        .auth-logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            text-decoration: none;
+            color: white;
+        }
+
+        .auth-logo span {
+            color: var(--accent);
+        }
+
+        .auth-logo i {
+            color: #f59e0b;
+        }
+
+        .auth-sub {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .input-grp {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-grp label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .input-grp input {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            padding: 14px 16px;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .input-grp input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .forgot-link {
+            font-size: 0.85rem;
+            color: var(--accent);
+            text-decoration: none;
+            align-self: flex-end;
+            margin-top: -10px;
+            margin-bottom: 24px;
+            font-weight: 500;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+
+        .auth-btn {
+            width: 100%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .auth-btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        .auth-switch a {
+            color: var(--text-main);
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            border-bottom: 1px dashed var(--text-muted);
+            transition: color 0.2s;
+        }
+
+        .auth-switch a:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Dynamic hides */
+        #register-fields {
+            display: none;
+        }
+
+        .mode-register #register-fields {
+            display: block;
+        }
+
+        .mode-register #title-login {
+            display: none;
+        }
+
+        #title-reg {
+            display: none;
+        }
+
+        .mode-register #title-reg {
+            display: block;
+        }
+
+        .mode-register .forgot-link {
+            display: none;
+        }
+
+        .error-box {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .quote-box {
+            margin-top: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="toast-container"
+        style="position:fixed; bottom:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px;">
+    </div>
+
+    <div class="auth-layout">
+        <div class="auth-left">
+            <a href="landing.html" class="back-nav"><i class="fa fa-arrow-left"></i> Back to Home</a>
+
+            <div class="auth-box" id="auth-box">
+                <div class="auth-header">
+                    <a href="landing.html" class="auth-logo"><i class="fa fa-balance-scale"></i>
+                        Reg<span>Alert</span></a>
+                    <div class="auth-sub" id="title-login">Welcome back. Please enter your details.</div>
+                    <div class="auth-sub" id="title-reg">Create a workspace for your startup.</div>
+                </div>
+
+                <div class="error-box" id="error-msg"></div>
+
+                <form id="auth-form" autocomplete="off">
+                    <div id="register-fields">
+                        <div class="input-grp">
+                            <label>Full Name</label>
+                            <input type="text" id="reg-name" placeholder="e.g. Rahul Sharma" autocomplete="name">
+                        </div>
+                        <div class="input-grp">
+                            <label>Company / Startup Name</label>
+                            <input type="text" id="reg-company" placeholder="e.g. FinTech Innovators"
+                                autocomplete="organization">
+                        </div>
+                    </div>
+
+                    <div class="input-grp">
+                        <label>Work Email</label>
+                        <input type="email" id="email" placeholder="you@company.com" required autocomplete="email">
+                    </div>
+                    <div class="input-grp">
+                        <label>Password</label>
+                        <input type="password" id="password" placeholder="••••••••" required
+                            autocomplete="current-password">
+                    </div>
+
+                    <a href="#" class="forgot-link" onclick="forgotPassword(event)">Forgot password?</a>
+
+                    <button type="submit" class="auth-btn" id="submit-btn">Login <i
+                            class="fa fa-arrow-right"></i></button>
+                </form>
+
+                <div class="auth-switch">
+                    <span id="switch-txt">Don't have an account?</span>
+                    <a onclick="toggleAuthMode()" id="switch-link">Sign up</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right side decorative -->
+        <div class="auth-right">
+            <div class="quote-box">
+                <h2
+                    style="font-size:3.5rem; font-weight:800; line-height:1.1; margin-bottom:24px; letter-spacing:-1px;">
+                    Automate<br>compliance.<br><span style="color:var(--accent);">Zero stress.</span></h2>
+                <p
+                    style="font-size:1.2rem; color:var(--text-muted); max-width:480px; line-height:1.6; margin-bottom:40px;">
+                    "RegAlert saves our legal team over 40 hours a month tracking RBI circulars. The AI summaries are a
+                    massive game-changer for our fintech startup."</p>
+
+                <div style="display:flex; gap:16px; align-items:center;">
+                    <div
+                        style="width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg, #3b82f6, #8b5cf6); border:2px solid rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:1.2rem;">
+                        SK</div>
+                    <div>
+                        <div style="font-size:1.1rem; font-weight:600; color:white;">Sandeep Kumar</div>
+                        <div style="font-size:0.9rem; color:var(--text-muted);">CFO, PayFlow India</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="api.js"></script>
+    <script src="login.js"></script>
+    <script>
+        function forgotPassword(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            if (!email) {
+                showToast('Please enter your email address first to reset password.', 'error');
+                return;
+            }
+            showToast('A password reset link has been sent to ' + email, 'success');
+        }
+
+        // Process ?mode=register from URL params
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('mode') === 'register') {
+            // Small delay to ensure login.js is loaded
+            setTimeout(() => {
+                if (!isRegisterMode) toggleAuthMode();
+            }, 100);
+        }
+    </script>
+</body>
+
+</html>
